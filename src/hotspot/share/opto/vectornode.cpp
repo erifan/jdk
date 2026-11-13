@@ -2972,6 +2972,23 @@ Node* VectorBlendNode::Identity(PhaseGVN* phase) {
   }
   return this;
 }
+
+Node* SubVBNode::Identity(PhaseGVN* phase) {
+  return GenericOpts::Identity_AddSub_cancel<NodeTypeCon::VECTOR>(this, phase);
+}
+
+Node* SubVSNode::Identity(PhaseGVN* phase) {
+  return GenericOpts::Identity_AddSub_cancel<NodeTypeCon::VECTOR>(this, phase);
+}
+
+Node* SubVINode::Identity(PhaseGVN* phase) {
+  return GenericOpts::Identity_AddSub_cancel<NodeTypeCon::VECTOR>(this, phase);
+}
+
+Node* SubVLNode::Identity(PhaseGVN* phase) {
+  return GenericOpts::Identity_AddSub_cancel<NodeTypeCon::VECTOR>(this, phase);
+}
+
 static bool is_replicate_uint_constant(const Node* n) {
   return n->Opcode() == Op_Replicate &&
          n->in(1)->is_Con() &&

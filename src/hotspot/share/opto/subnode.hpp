@@ -72,6 +72,7 @@ class SubINode : public SubNode {
 public:
   SubINode( Node *in1, Node *in2 ) : SubNode(in1,in2) {}
   virtual int Opcode() const;
+  virtual Node* Identity(PhaseGVN* phase);
   virtual Node *Ideal(PhaseGVN *phase, bool can_reshape);
   virtual const Type *sub( const Type *, const Type * ) const;
   const Type *add_id() const { return TypeInt::ZERO; }
@@ -85,6 +86,7 @@ class SubLNode : public SubNode {
 public:
   SubLNode( Node *in1, Node *in2 ) : SubNode(in1,in2) {}
   virtual int Opcode() const;
+  virtual Node* Identity(PhaseGVN* phase);
   virtual Node *Ideal(PhaseGVN *phase, bool can_reshape);
   virtual const Type *sub( const Type *, const Type * ) const;
   const Type *add_id() const { return TypeLong::ZERO; }

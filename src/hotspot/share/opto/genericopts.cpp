@@ -22,7 +22,9 @@
  *
  */
 
+#include "opto/addnode.hpp"
 #include "opto/genericopts.hpp"
+#include "opto/subnode.hpp"
 #include "opto/vectornode.hpp"
 
 // This file implements the generic optimization framework.
@@ -40,9 +42,51 @@ template<NodeTypeCon NT>
 class NodeOps;
 
 template<>
+class NodeOps<NodeTypeCon::INT> : public StackObj {
+ public:
+  explicit NodeOps(PhaseGVN* phase) {}
+
+  bool is_add(const Node* n) const {
+    return n->Opcode() == Op_AddI;
+  }
+
+  bool is_sub(const Node* n) const {
+    return n->Opcode() == Op_SubI;
+  }
+};
+
+template<>
+class NodeOps<NodeTypeCon::LONG> : public StackObj {
+ public:
+  explicit NodeOps(PhaseGVN* phase) {}
+
+  bool is_add(const Node* n) const {
+    return n->Opcode() == Op_AddL;
+  }
+
+  bool is_sub(const Node* n) const {
+    return n->Opcode() == Op_SubL;
+  }
+};
+
+template<>
 class NodeOps<NodeTypeCon::VECTOR> : public StackObj {
  public:
   explicit NodeOps(PhaseGVN* phase) : _phase(phase) {}
+
+  // Unpredicated integral AddV.
+  bool is_add(const Node* n) const {
+    int opc = n->Opcode();
+    return (opc == Op_AddVB || opc == Op_AddVS || opc == Op_AddVI || opc == Op_AddVL) &&
+           !n->is_predicated_vector();
+  }
+
+  // Unpredicated integral SubV.
+  bool is_sub(const Node* n) const {
+    int opc = n->Opcode();
+    return (opc == Op_SubVB || opc == Op_SubVS || opc == Op_SubVI || opc == Op_SubVL) &&
+           !n->is_predicated_vector();
+  }
 
   // Unpredicated AndV.
   bool is_and(const Node* n) const {
@@ -156,5 +200,34 @@ Node* GenericOpts::Ideal_XorAnd_to_AndNot(Node* n, PhaseGVN* phase) {
   return ops.make_and(shared, not_other);
 }
 
+// Canonicalize `(A + B) - B` to `A` and `(A + B) - A` to `B`.
+template<NodeTypeCon NT>
+Node* GenericOpts::Identity_AddSub_cancel(Node* n, PhaseGVN* phase) {
+  NodeOps<NT> ops(phase);
+
+  if (!ops.is_sub(n)) {
+    return n;
+  }
+
+  Node* add_node = n->in(1);
+  if (!ops.is_add(add_node)) {
+    return n;
+  }
+
+  Node* right = n->in(2);
+  if (add_node->in(2) == right) {
+    return add_node->in(1);
+  }
+  if (add_node->in(1) == right) {
+    return add_node->in(2);
+  }
+
+  return n;
+}
+
 template Node* GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::VECTOR>(Node* n, PhaseGVN* phase);
 template Node* GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::PVECTMASK>(Node* n, PhaseGVN* phase);
+
+template Node* GenericOpts::Identity_AddSub_cancel<NodeTypeCon::INT>(Node* n, PhaseGVN* phase);
+template Node* GenericOpts::Identity_AddSub_cancel<NodeTypeCon::LONG>(Node* n, PhaseGVN* phase);
+template Node* GenericOpts::Identity_AddSub_cancel<NodeTypeCon::VECTOR>(Node* n, PhaseGVN* phase);

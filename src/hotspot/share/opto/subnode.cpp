@@ -32,6 +32,7 @@
 #include "opto/castnode.hpp"
 #include "opto/cfgnode.hpp"
 #include "opto/convertnode.hpp"
+#include "opto/genericopts.hpp"
 #include "opto/loopnode.hpp"
 #include "opto/matcher.hpp"
 #include "opto/movenode.hpp"
@@ -69,16 +70,6 @@ Node* SubNode::Identity(PhaseGVN* phase) {
       phase->type(in(2)->in(1))->higher_equal(zero) &&
       !phase->type(in(2)->in(2))->is_floatingpoint()) {
     return in(2)->in(2);
-  }
-
-  // Convert "(X+Y) - Y" into X and "(X+Y) - X" into Y
-  if (in(1)->Opcode() == Op_AddI || in(1)->Opcode() == Op_AddL) {
-    if (in(1)->in(2) == in(2)) {
-      return in(1)->in(1);
-    }
-    if (in(1)->in(1) == in(2)) {
-      return in(1)->in(2);
-    }
   }
 
   return ( phase->type( in(2) )->higher_equal( zero ) ) ? in(1) : this;
@@ -169,6 +160,15 @@ static bool is_cloop_condition(BoolNode* bol) {
     }
   }
   return false;
+}
+
+//------------------------------Identity---------------------------------------
+Node* SubINode::Identity(PhaseGVN* phase) {
+  Node* res = GenericOpts::Identity_AddSub_cancel<NodeTypeCon::INT>(this, phase);
+  if (res != this) {
+    return res;
+  }
+  return SubNode::Identity(phase);
 }
 
 //------------------------------Ideal------------------------------------------
@@ -367,6 +367,15 @@ const Type* SubINode::sub(const Type* t1, const Type* t2) const {
 }
 
 //=============================================================================
+//------------------------------Identity---------------------------------------
+Node* SubLNode::Identity(PhaseGVN* phase) {
+  Node* res = GenericOpts::Identity_AddSub_cancel<NodeTypeCon::LONG>(this, phase);
+  if (res != this) {
+    return res;
+  }
+  return SubNode::Identity(phase);
+}
+
 //------------------------------Ideal------------------------------------------
 Node *SubLNode::Ideal(PhaseGVN *phase, bool can_reshape) {
   Node *in1 = in(1);

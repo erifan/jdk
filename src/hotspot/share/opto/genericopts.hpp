@@ -31,7 +31,9 @@
 // Template argument that selects the NodeOps specialization used by a generic
 // optimization.
 enum class NodeTypeCon {
-  VECTOR,    // Vector, e.g. XorV
+  INT,       // Int, e.g. XorI, SubI
+  LONG,      // Long, e.g. XorL, SubL
+  VECTOR,    // Vector, e.g. XorV, SubV
   PVECTMASK  // PVectMask, e.g. XorVMask
 };
 
@@ -47,6 +49,9 @@ class GenericOpts : public AllStatic {
  public:
   template<NodeTypeCon NT>
   static Node* Ideal_XorAnd_to_AndNot(Node* root, PhaseGVN* phase);
+
+  template<NodeTypeCon NT>
+  static Node* Identity_AddSub_cancel(Node* root, PhaseGVN* phase);
 };
 
 #endif // SHARE_OPTO_GENERICOPTS_HPP

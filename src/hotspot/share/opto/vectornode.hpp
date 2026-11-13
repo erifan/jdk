@@ -457,6 +457,7 @@ class SubVBNode : public VectorNode {
  public:
   SubVBNode(Node* in1, Node* in2, const TypeVect* vt) : VectorNode(in1,in2,vt) {}
   virtual int Opcode() const;
+  virtual Node* Identity(PhaseGVN* phase);
 };
 
 // Vector subtract short
@@ -464,6 +465,7 @@ class SubVSNode : public VectorNode {
  public:
   SubVSNode(Node* in1, Node* in2, const TypeVect* vt) : VectorNode(in1,in2,vt) {}
   virtual int Opcode() const;
+  virtual Node* Identity(PhaseGVN* phase);
 };
 
 // Vector subtract int
@@ -471,6 +473,7 @@ class SubVINode : public VectorNode {
  public:
   SubVINode(Node* in1, Node* in2, const TypeVect* vt) : VectorNode(in1,in2,vt) {}
   virtual int Opcode() const;
+  virtual Node* Identity(PhaseGVN* phase);
 };
 
 // Vector subtract long
@@ -478,6 +481,7 @@ class SubVLNode : public VectorNode {
  public:
   SubVLNode(Node* in1, Node* in2, const TypeVect* vt) : VectorNode(in1,in2,vt) {}
   virtual int Opcode() const;
+  virtual Node* Identity(PhaseGVN* phase);
 };
 
 // Vector saturating addition.
