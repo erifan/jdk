@@ -27,6 +27,7 @@
 #include "opto/castnode.hpp"
 #include "opto/cfgnode.hpp"
 #include "opto/connode.hpp"
+#include "opto/genericopts.hpp"
 #include "opto/machnode.hpp"
 #include "opto/movenode.hpp"
 #include "opto/mulnode.hpp"
@@ -1161,6 +1162,12 @@ Node* XorINode::Ideal(PhaseGVN* phase, bool can_reshape) {
     }
   }
 
+  // (XorI (AndI A B) B) => (AndI B (XorI A -1))
+  Node* res = GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::INT>(this, phase);
+  if (res != nullptr) {
+    return res;
+  }
+
   return AddNode::Ideal(phase, can_reshape);
 }
 
@@ -1212,6 +1219,13 @@ Node* XorLNode::Ideal(PhaseGVN* phase, bool can_reshape) {
       phase->record_for_igvn(this);
     }
   }
+
+  // (XorL (AndL A B) B) => (AndL B (XorL A -1L))
+  Node* res = GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::LONG>(this, phase);
+  if (res != nullptr) {
+    return res;
+  }
+
   return AddNode::Ideal(phase, can_reshape);
 }
 

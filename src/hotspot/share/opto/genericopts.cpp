@@ -22,7 +22,9 @@
  *
  */
 
+#include "opto/addnode.hpp"
 #include "opto/genericopts.hpp"
+#include "opto/mulnode.hpp"
 #include "opto/vectornode.hpp"
 
 // This file implements the generic optimization framework.
@@ -38,6 +40,64 @@
 
 template<NodeTypeCon NT>
 class NodeOps;
+
+template<>
+class NodeOps<NodeTypeCon::INT> : public StackObj {
+ public:
+  explicit NodeOps(PhaseGVN* phase) : _phase(phase) {}
+
+  bool is_and(const Node* n) const {
+    return n->Opcode() == Op_AndI;
+  }
+
+  bool is_xor(const Node* n) const {
+    return n->Opcode() == Op_XorI;
+  }
+
+  Node* make_and(Node* in1, Node* in2) const {
+    return new AndINode(in1, in2);
+  }
+
+  Node* make_xor(Node* in1, Node* in2) const {
+    return new XorINode(in1, in2);
+  }
+
+  Node* make_not(Node* n) const {
+    return AddNode::make_not(_phase, n, T_INT);
+  }
+
+ private:
+  PhaseGVN* _phase;
+};
+
+template<>
+class NodeOps<NodeTypeCon::LONG> : public StackObj {
+ public:
+  explicit NodeOps(PhaseGVN* phase) : _phase(phase) {}
+
+  bool is_and(const Node* n) const {
+    return n->Opcode() == Op_AndL;
+  }
+
+  bool is_xor(const Node* n) const {
+    return n->Opcode() == Op_XorL;
+  }
+
+  Node* make_and(Node* in1, Node* in2) const {
+    return new AndLNode(in1, in2);
+  }
+
+  Node* make_xor(Node* in1, Node* in2) const {
+    return new XorLNode(in1, in2);
+  }
+
+  Node* make_not(Node* n) const {
+    return AddNode::make_not(_phase, n, T_LONG);
+  }
+
+ private:
+  PhaseGVN* _phase;
+};
 
 template<>
 class NodeOps<NodeTypeCon::VECTOR> : public StackObj {
@@ -156,5 +216,7 @@ Node* GenericOpts::Ideal_XorAnd_to_AndNot(Node* n, PhaseGVN* phase) {
   return ops.make_and(shared, not_other);
 }
 
+template Node* GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::INT>(Node* n, PhaseGVN* phase);
+template Node* GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::LONG>(Node* n, PhaseGVN* phase);
 template Node* GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::VECTOR>(Node* n, PhaseGVN* phase);
 template Node* GenericOpts::Ideal_XorAnd_to_AndNot<NodeTypeCon::PVECTMASK>(Node* n, PhaseGVN* phase);

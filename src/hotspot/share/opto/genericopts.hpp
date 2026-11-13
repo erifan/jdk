@@ -31,6 +31,8 @@
 // Template argument that selects the NodeOps specialization used by a generic
 // optimization.
 enum class NodeTypeCon {
+  INT,       // Int, e.g. XorI
+  LONG,      // Long, e.g. XorL
   VECTOR,    // Vector, e.g. XorV
   PVECTMASK  // PVectMask, e.g. XorVMask
 };
